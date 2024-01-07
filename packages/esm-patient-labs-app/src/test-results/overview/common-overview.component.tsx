@@ -14,6 +14,7 @@ interface CommonOverviewPropsBase {
   overviewData: Array<OverviewPanelEntry>;
   insertSeparator?: boolean;
   patientUuid?: string;
+  seeAllResults?: boolean;
 }
 
 interface CommonOverviewPropsWithToolbar {
@@ -43,6 +44,7 @@ const CommonOverview: React.FC<CommonOverviewProps> = ({
   insertSeparator = false,
   hideToolbar = false,
   patientUuid,
+  seeAllResults,
 }) => {
   const { t } = useTranslation();
   const [activeCardUuid, setActiveCardUuid] = React.useState('');
@@ -68,10 +70,12 @@ const CommonOverview: React.FC<CommonOverviewProps> = ({
       <EmptyState headerTitle={t('testResults_title', 'Test Results')} displayText={t('testResults', 'test results')} />
     );
 
+  const filteredOverviewData = seeAllResults ? overviewData : overviewData.slice(0, 3);
+
   return (
     <>
       {(() => {
-        const cards = overviewData.map(([title, type, data, effectiveDateTime, issuedDateTime, uuid]) => (
+        const cards = filteredOverviewData.map(([title, type, data, effectiveDateTime, issuedDateTime, uuid]) => (
           <article
             key={uuid}
             className={insertSeparator ? '' : `${styles.card} ${isActiveCard(uuid) ? styles.activeCard : ''}`}

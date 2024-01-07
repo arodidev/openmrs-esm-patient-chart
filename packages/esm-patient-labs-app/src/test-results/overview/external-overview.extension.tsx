@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import { Button, DataTableSkeleton } from '@carbon/react';
@@ -45,6 +45,8 @@ function useFilteredOverviewData(patientUuid: string, filter: (filterProps: Pane
 }
 
 const ExternalOverview: React.FC<ExternalOverviewProps> = ({ patientUuid, filter }) => {
+  const [seeAllResults, setSeeAllResults] = useState<boolean>(false);
+
   const { t } = useTranslation();
   const { overviewData, loaded, error } = useFilteredOverviewData(patientUuid, filter);
 
@@ -67,7 +69,7 @@ const ExternalOverview: React.FC<ExternalOverviewProps> = ({ patientUuid, filter
                       kind="ghost"
                       renderIcon={(props) => <ArrowRight size={16} {...props} />}
                       iconDescription="See all results"
-                      onClick={handleSeeAll}
+                      onClick={() => setSeeAllResults(true)}
                     >
                       {t('seeAllResults', 'See all results')}
                     </Button>
@@ -75,15 +77,16 @@ const ExternalOverview: React.FC<ExternalOverviewProps> = ({ patientUuid, filter
                   <CommonOverview
                     {...{
                       patientUuid,
-                      overviewData: overviewData.slice(0, resultsToShow),
+                      overviewData: overviewData,
                       insertSeparator: true,
                       deactivateToolbar: true,
                       isPatientSummaryDashboard: false,
                       hideToolbar: true,
+                      seeAllResults: seeAllResults,
                     }}
                   />
-                  {overviewData.length > resultsToShow && (
-                    <Button onClick={handleSeeAll} kind="ghost">
+                  {overviewData.length > resultsToShow && !seeAllResults && (
+                    <Button onClick={() => setSeeAllResults(true)} kind="ghost">
                       {t('moreResultsAvailable', 'More results available')}
                     </Button>
                   )}
