@@ -36,7 +36,10 @@ function getFilteredOverviewData(sortedObs: PatientData, filter) {
     .sort(([, , , date1], [, , , date2]) => date2.getTime() - date1.getTime());
 }
 
-function useFilteredOverviewData(patientUuid: string, filter: (filterProps: PanelFilterProps) => boolean = () => true) {
+export function useFilteredOverviewData(
+  patientUuid: string,
+  filter: (filterProps: PanelFilterProps) => boolean = () => true,
+) {
   const { sortedObs, loaded, error } = usePatientResultsData(patientUuid);
 
   const overviewData = useMemo(() => getFilteredOverviewData(sortedObs, filter), [filter, sortedObs]);
@@ -70,6 +73,7 @@ const ExternalOverview: React.FC<ExternalOverviewProps> = ({ patientUuid, filter
                       renderIcon={(props) => <ArrowRight size={16} {...props} />}
                       iconDescription="See all results"
                       onClick={() => setSeeAllResults(true)}
+                      data-testid="see-all-button"
                     >
                       {t('seeAllResults', 'See all results')}
                     </Button>
