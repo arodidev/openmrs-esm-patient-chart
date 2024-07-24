@@ -369,7 +369,7 @@ const OrderDetailsTable: React.FC<OrderDetailsProps> = ({ title, patientUuid, sh
                       <Search
                         expanded
                         onChange={onInputChange}
-                        placeholder={t('searchByTerm', 'Search By Column')}
+                        placeholder={t('searchByTerm', 'Search By Column Name')}
                         size="lg"
                       />
                     </Layer>
