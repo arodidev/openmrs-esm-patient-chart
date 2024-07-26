@@ -6,7 +6,15 @@ import {
   launchPatientWorkspace,
   useOrderBasket,
 } from '@openmrs/esm-patient-common-lib';
-import { translateFrom, useLayoutType, useSession, useConfig, ExtensionSlot } from '@openmrs/esm-framework';
+import {
+  translateFrom,
+  useLayoutType,
+  useSession,
+  useConfig,
+  ExtensionSlot,
+  restBaseUrl,
+  openmrsFetch,
+} from '@openmrs/esm-framework';
 import { prepLabOrderPostData, useOrderReasons } from '../api';
 import {
   Button,
@@ -19,6 +27,9 @@ import {
   InlineNotification,
   TextInput,
   TextArea,
+  FilterableMultiSelect,
+  NumberInput,
+  TextInputSkeleton,
 } from '@carbon/react';
 import { useTranslation } from 'react-i18next';
 import { ordersEqual, priorityOptions } from './lab-order';
@@ -29,14 +40,32 @@ import { z } from 'zod';
 import { moduleName } from '@openmrs/esm-patient-chart-app/src/constants';
 import { type ConfigObject } from '../../config-schema';
 import styles from './lab-order-form.scss';
+import useSWR from 'swr';
 
 export interface LabOrderFormProps extends DefaultPatientWorkspaceProps {
   initialOrder: LabOrderBasketItem;
 }
 
+interface extendedOrderBasketItem extends LabOrderBasketItem {
+  samples: string;
+}
+
 // Designs:
 //   https://app.zeplin.io/project/60d5947dd636aebbd63dce4c/screen/640b06c440ee3f7af8747620
 //   https://app.zeplin.io/project/60d5947dd636aebbd63dce4c/screen/640b06d286e0aa7b0316db4a
+
+const useSampleData = (conceptUuid: string) => {
+  if (!conceptUuid) throw new Error('Null value exception: no concept uuid provided');
+
+  const url = `${restBaseUrl}/concept/${conceptUuid}`;
+
+  const { data, isLoading, error } = useSWR<{ data: Record<string, any> }>(url, openmrsFetch); //add proper typings for this when we have concept information
+
+  const responseData = data?.data.setMembers;
+
+  return { responseData, isLoading, error };
+};
+
 export function LabOrderForm({
   initialOrder,
   closeWorkspace,
@@ -54,6 +83,7 @@ export function LabOrderForm({
   const orderReasonRequired = (
     config.labTestsWithOrderReasons?.find((c) => c.labTestUuid === initialOrder?.testType?.conceptUuid) || {}
   ).required;
+  const [selectedSamples, setSelectedSamples] = useState([]); //will add typings for this also
 
   const labOrderFormSchema = useMemo(
     () =>
@@ -70,6 +100,7 @@ export function LabOrderForm({
             invalid_type_error: translateFrom(moduleName, 'addLabOrderLabReferenceRequired', 'Test type is required'),
           },
         ),
+        samples: z.string().optional(),
         orderReason: orderReasonRequired
           ? z
               .string({
@@ -88,11 +119,24 @@ export function LabOrderForm({
     [orderReasonRequired],
   );
 
+  const { responseData: sampleData, isLoading: isLoadingSamples, error } = useSampleData(config.labSamplesConcept);
+
+  const selectOptions = sampleData?.map((eachItem, index) => ({
+    id: `${eachItem.display.split(' ')[0]}`, //this is improper, will do better
+    concept: eachItem.uuid,
+    label: eachItem.display,
+    key: index,
+  }));
+
+  const handleSelectItemsChange = ({ selectedItems }) => {
+    setSelectedSamples(() => selectedItems);
+  };
+
   const {
     control,
     handleSubmit,
     formState: { errors, defaultValues, isDirty },
-  } = useForm<LabOrderBasketItem>({
+  } = useForm<extendedOrderBasketItem>({
     mode: 'all',
     resolver: zodResolver(labOrderFormSchema),
     defaultValues: {
@@ -274,6 +318,53 @@ export function LabOrderForm({
               </InputWrapper>
             </Column>
           </Grid>
+          {isLoadingSamples ? (
+            <TextInputSkeleton /> //might move all this to a separate component
+          ) : (
+            <Grid className={styles.gridRow}>
+              <Column lg={16} md={8} sm={4}>
+                <InputWrapper>
+                  <Controller
+                    name="samples"
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FilterableMultiSelect
+                        placeholder={t('search', 'Search') + '...'}
+                        items={selectOptions}
+                        // initialSelectedItems={initiallySelectedQuestionItems} //TO-DO
+                        // itemToString={(item) => (item ? item.label : ' ')}
+                        id="labOrderSamples"
+                        size={responsiveSize}
+                        titleText={t('labOrderSamples', 'Lab Order Samples')}
+                        onChange={handleSelectItemsChange} //will need to learn how to utilize the RHF onChange instead of a custom one...
+                        value={value}
+                        onBlur={onBlur}
+                        invalid={errors.samples?.message}
+                        invalidText={errors.samples?.message}
+                      />
+                    )}
+                  />
+                </InputWrapper>
+              </Column>
+            </Grid>
+          )}
+          {selectedSamples.length
+            ? selectedSamples.map(
+                (
+                  eachSample, //we need typings for the samples
+                ) => (
+                  // will remove this div to add proper spacing here
+                  //This will go to a separate component
+                  <div style={{ padding: '1rem 0' }}>
+                    <Grid className={styles.gridRow}>
+                      <Column lg={16} md={8} sm={4}>
+                        <NumberInput label={`Enter number of ${eachSample.label} samples collected`} />
+                      </Column>
+                    </Grid>
+                  </div>
+                ),
+              )
+            : null}
         </div>
         <div>
           {showErrorNotification && (

@@ -54,6 +54,11 @@ export const configSchema = {
       _default: ['1748a953-d12e-4be1-914c-f6b096c6cdef'],
     },
   },
+  labSamplesConcept: {
+    _type: Type.UUID,
+    _description: 'A concept UUID for lab samples',
+    _default: '1748a953-d12e-4be1-914c-f6b096c6cdef',
+  },
   labTestsWithOrderReasons: {
     _type: Type.Array,
     _elements: {
@@ -98,6 +103,7 @@ export interface OrderReason {
 export interface ConfigObject {
   resultsViewerConcepts: Array<ObsTreeEntry>;
   showPrintButton: boolean;
+  labSamplesConcept: string;
   orders: {
     labOrderTypeUuid: string;
     labOrderableConcepts: Array<string>;
