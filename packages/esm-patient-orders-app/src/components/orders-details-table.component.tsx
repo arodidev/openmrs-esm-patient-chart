@@ -364,16 +364,18 @@ const OrderDetailsTable: React.FC<OrderDetailsProps> = ({ title, patientUuid, sh
                 onInputChange,
               }) => (
                 <TableContainer {...getTableContainerProps}>
-                  <TableToolbarContent>
-                    <Layer className={styles.toolbarItem}>
-                      <Search
-                        expanded
-                        onChange={onInputChange}
-                        placeholder={t('searchByTerm', 'Search By Column Name')}
-                        size="lg"
-                      />
-                    </Layer>
-                  </TableToolbarContent>
+                  <div className={styles.toolBarContent}>
+                    <TableToolbarContent>
+                      <Layer>
+                        <Search
+                          expanded
+                          onChange={onInputChange}
+                          placeholder={t('searchTable', 'Search Table')}
+                          size="lg"
+                        />
+                      </Layer>
+                    </TableToolbarContent>
+                  </div>
                   <Table className={styles.table} {...getTableProps()}>
                     <TableHead>
                       <TableRow>
