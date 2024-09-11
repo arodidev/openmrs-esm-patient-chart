@@ -89,7 +89,7 @@ const IndividualResultsTable = ({ isLoading, parent, subRows, index }) => {
             {t('viewTimeline', 'View timeline')}
           </Button>
         </CardHeader>
-        <DataTable rows={tableRows} headers={tableHeaders}>
+        <DataTable rows={tableRows} headers={tableHeaders} useZebraStyles>
           {({ rows, headers, getHeaderProps, getTableProps }) => (
             <TableContainer>
               <Table className={styles.table} {...getTableProps()} size={isDesktop(layout) ? 'sm' : 'md'}>
